@@ -1,0 +1,314 @@
+/*
+按键控制LED，实现功能是，初始状态是灯灭，按一下亮，按一下灭
+*/
+
+int buttonPin = 2;
+int ledPin = 13;
+boolean ledState = false;   // 记录LED状态
+boolean buttonState = true; // 记录按键状态
+
+void setup()
+{
+  //初始化I/O口
+  pinMode(buttonPin, INPUT_PULLUP);
+  pinMode(ledPin, OUTPUT);
+}
+
+void loop()
+{
+  //等待按键按下
+  while (digitalRead(buttonPin) == HIGH)
+  {
+  }
+
+  //当按键按下时，点亮或熄灭LED
+  if (ledState == true)
+  {
+    digitalWrite(ledPin, LOW);
+    ledState = !ledState;
+  }
+  else
+  {
+    digitalWrite(ledPin, HIGH);
+    ledState = !ledState;
+  }
+  delay(500);
+}
+
+
+
+
+//蜂鸣器持续报警
+#include "pitches.h"
+
+// 记录曲子的音符
+int melody[] = {
+    NOTE_C4, NOTE_G3, NOTE_G3, NOTE_A3, NOTE_G3, 0, NOTE_B3, NOTE_C4};
+
+// 音符持续时间  4为四分音符， 8为八分音符
+int noteDurations[] = {
+    4, 8, 8, 4, 4, 4, 4, 4};
+
+void setup()
+{
+  // 遍历整个曲子的音符
+ // for (int thisNote = 0; thisNote < 8; thisNote++)
+ // {
+
+    // noteDurations[]数组中存储的是音符的类型
+    // 我们需要将其换算为音符持续时间，方法如下：
+    // 音符持续时间=1000ms / 音符类型
+    //例如，四分音符=1000 / 4，8分音符 = 1000/8
+    int thisNote = 0;
+    int noteDuration = 1000 / noteDurations[thisNote];
+    tone(8, melody[thisNote], noteDuration);
+
+    // 为了能辨别出不同的音调，你需要在两个音调间设置一定的延时
+    // 增加30%延时时间是比较合适的
+    int pauseBetweenNotes = noteDuration * 1.30;
+    delay(pauseBetweenNotes);
+    // 停止发声
+    noTone(8);
+ // }
+}
+
+void loop()
+{
+    int thisNote = 0;
+    int noteDuration = 1000 / noteDurations[thisNote];
+    tone(8, melody[thisNote], noteDuration);
+    int pauseBetweenNotes = noteDuration * 1.30;
+    delay(pauseBetweenNotes);
+    noTone(8);
+}
+
+
+
+
+
+
+//数码管库文件
+#include "SevSeg.h"
+//数码管动态累加器,4位数码管，数码管位数可调
+SevSeg sevseg;
+
+byte numDigits = 4; //数码管位数
+byte digitPins[] = {3, 4, 5, 6}; //数码管公共极连接Arduino的引脚
+byte segmentPins[] = {7,8,9,10,11,12,13,2}; //数码管a,b,c,d,e,f,g,dp对应引脚
+byte hardwareConfig = COMMON_ANODE ; // 共阳极数码管
+
+int numToShow = 0;
+int delaycount = 0;
+
+void setup() {
+  sevseg.begin(hardwareConfig, numDigits, digitPins, segmentPins); //初始化数码管
+}
+
+void loop() {
+
+  delaycount++;
+  if (delaycount  == 10000) { //通过变量自加来达到延时效果，如果使用delay函数则会打断数码管显示
+    delaycount = 0;
+    numToShow++;
+  }
+
+  if (numToShow > 9999)
+  {
+    numToShow = 0;
+  }
+  
+  sevseg.setNumber(numToShow, -1); //设置要显示的数据，不显示小数点
+  sevseg.refreshDisplay(); // 必须重复运行刷新数码管显示
+
+}
+
+
+
+
+
+//功能，电位器控制LED灯亮暗，串口A0模拟输入
+void setup() {
+  //初始化串口
+  Serial.begin(9600);
+}
+
+void loop() {
+  // 读取串口输入
+  int sensorValue = analogRead(A0);
+  float voltage = sensorValue ;
+//* (5.0 / 1023.0);
+  //输出值
+  Serial.println(voltage);
+}
+
+
+
+
+
+//旋转编码器控制输出值
+int pinA = 3;  //   CLK接 pin3
+
+ int pinB = 4;  //   DT接pin4     SW是按键，不用接。
+
+ int encoderPosCount = 0; //计数器
+
+ int pinALast;  //最后A接口的值
+
+ int aVal;//有效值
+
+// boolean bCW;//判断顺时针还是逆时针
+
+ void setup() { 
+
+   pinMode (pinA,INPUT);
+
+   pinMode (pinB,INPUT);
+
+   pinALast = digitalRead(pinA);   
+
+   Serial.begin (9600);
+
+ } 
+
+ void loop() { 
+
+   aVal = digitalRead(pinA);
+
+   if (aVal != pinALast){//判断A接口的有效值和最后值是不是相等
+    //不相等意味着值变化了，继续判断
+     if (digitalRead(pinB) != aVal) {  // 顺时针旋转，数值加一
+
+       encoderPosCount ++;
+Serial.print ("Rotated: ");
+ Serial.println ("clockwise");
+  //     bCW = true;
+Serial.print("Encoder Position: ");
+
+     Serial.println(encoderPosCount);
+
+     } else {
+
+   //    bCW = false;
+
+       encoderPosCount--;
+Serial.print ("Rotated: ");
+ Serial.println ("counterclockwise");
+ Serial.print("Encoder Position: ");
+
+     Serial.println(encoderPosCount);
+     }
+
+   } 
+
+   pinALast = aVal;//保存最后的值等下一次循环继续判断
+
+ }    
+
+
+
+
+
+
+  //数码管库文件，功能是，旋转编码器控制数码管输出，无上限
+#include "SevSeg.h"
+
+SevSeg sevseg;
+
+int pinA = 2;
+int pinB = 3;
+byte numDigits = 3; //数码管位数
+byte digitPins[] = { 4, 5, 6}; //数码管公共极连接Arduino的引脚
+byte segmentPins[] = {7,8,9,10,11,12,13}; //数码管a,b,c,d,e,f,g,dp对应引脚
+byte hardwareConfig = COMMON_ANODE ; // 共阳极数码管
+
+int numToShow = 0;
+int pinALast ;
+int aVal ;
+//int delaycount = 0;
+
+void setup() {
+
+   pinMode (pinA,INPUT);
+
+   pinMode (pinB,INPUT);
+
+   pinALast = digitalRead(pinA);   
+
+   Serial.begin (9600);
+  sevseg.begin(hardwareConfig, numDigits, digitPins, segmentPins); //初始化数码管
+}
+
+void loop() {
+   aVal = digitalRead(pinA);
+
+   if (aVal != pinALast){//判断A接口的有效值和最后值是不是相等
+    //不相等意味着值变化了，继续判断
+     if (digitalRead(pinB) != aVal) {  // 顺时针旋转，数值加一
+
+      numToShow ++;
+     } else {
+      numToShow --;
+     }
+
+   } 
+
+   pinALast = aVal;//保存最后的值等下一次循环继续判断
+  sevseg.setNumber(numToShow, -1); //设置要显示的数据，不显示小数点
+  sevseg.refreshDisplay(); // 必须重复运行刷新数码管显示
+
+}           
+
+
+
+
+
+//三色LED灯光渐变，接地线
+  int led1 = 9;
+int led2 = 10;
+int led3 = 11;
+void setup()
+{
+  pinMode(led1,OUTPUT);
+  pinMode(led2,OUTPUT);
+  pinMode(led3,OUTPUT);
+}
+void setColor(int red,int green,int blue)
+{
+  analogWrite(led1,255-red);
+  analogWrite(led2,255-green);
+  analogWrite(led3,255-blue);
+}
+void loop()
+{
+  int i,j;
+  for(i=0,j=255;i<256;i++)
+  {
+    setColor(i,j,0);
+    delay(4);
+    j--;
+  }
+  delay(100);           //绿色向红色渐变
+  for(i=0,j=255;i<256;i++)
+  {
+    setColor(j,0,i);
+    delay(4);
+    j--;
+  }
+  delay(100);           //红色向蓝色渐变
+  for(i=0,j=255;i<256;i++)
+  {
+    setColor(0,i,j);
+    delay(4);
+    j--;
+  }
+  delay(100);          //蓝色向绿色渐变
+}       
+
+
+
+
+
+
+
+
+                 
